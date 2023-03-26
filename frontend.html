@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Title</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  </head>
+  <body>
+    <form onsubmit="userDetails(event)">
+        <label for="exp">Choose expenseamount:</label>
+        <input type="number" id="exp" name="exp">
+        <label for="descr">Choose description:</label>
+        <input type="text" id="descr" name="descr">
+        <label for="cat">Choose a category:</label>
+        <select name="cat" id="cat">
+            <option value="fuel">fuel</option>
+            <option value="food">food</option>
+            <option value="elec">electricity</option>
+            <option value="Movie">Movie</option>
+        </select>
+        <button>Add Expense</button>
+    </form>
+    <ul id='userList'></ul>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
+    <script>
+        function userDetails(event){
+            event.preventDefault()
+            const exp = event.target.exp.value;
+            const descr = event.target.descr.value;
+            const cat = event.target.cat.value;
+        
+            const obj = {
+                exp,
+                descr,
+                cat
+            };
+
+            axios.post("http://localhost:3000/user/add-user", obj)
+                .then((response) => {
+                    console.log(response);
+                    showUser(response.data.newUserDetail); 
+                })
+                .catch((err) => {
+                    document.body.innerHTML = document.body.innerHTML + "<h4> Something went wrong</h4>"
+                    console.log(err);
+                })
+
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            axios.get("http://localhost:3000/user/get-users")
+                .then((response) => {
+                    console.log(response);
+
+                    for(var i =0;i<response.data.allUsers.length;i++){
+                        showUser(response.data.allUsers[i]);
+                    }
+                })
+                .catch((error) => {
+                    console.log(error);
+                })
+
+        })
+        function showUser(user){
+
+            document.getElementById('exp').value = '';
+            document.getElementById('descr').value = '';
+            document.getElementById('cat').value = '';
+
+            if(localStorage.getItem(user.email) !== null){
+                removeUserFromScreen(user.email)
+            }
+
+            const parentNode = document.getElementById('userList');
+            const childHTML = `<li id=${user.id}> ${user.exp} - ${user.descr} 
+                                    <button onclick=deleteUser('${user.id}')> Delete </button>
+                                </li>`
+            parentNode.innerHTML = parentNode.innerHTML + childHTML;
+
+        }
+
+
+        function deleteUser(userId){
+            axios.delete(`http://localhost:3000/user/delete-user/${userId}`)
+                .then((response) => {
+                    removeUserFromScreen(userId)
+                })
+                .catch((err) => {
+                    console.log(err);
+                })
+        }
+
+
+        function removeUserFromScreen(userId){
+            const parentNode = document.getElementById('userList');
+            const childNodeToBeDeleted = document.getElementById(userId);
+            if(childNodeToBeDeleted) {
+                parentNode.removeChild(childNodeToBeDeleted);
+            }
+        
+        }
+
+    
+    </script>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>
